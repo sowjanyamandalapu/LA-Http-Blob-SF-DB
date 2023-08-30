@@ -259,7 +259,7 @@
               "kind": "http",
               "inputs": {
                 "statusCode": 200,
-                "body": "@body('Get_rows_(V2)_2')"
+                "body": "@{body('Get_rows_(V2)_2')} \"Response\""
               },
               "runAfter": {
                 "Get_rows_(V2)_2": [
