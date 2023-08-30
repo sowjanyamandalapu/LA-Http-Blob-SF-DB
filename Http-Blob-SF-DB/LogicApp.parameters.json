@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "value": "Http-Blob-SF-DB"
+    },
+    "azureblob_1_accountName": {
+      "value": "pivalutilities16896"
+    },
+    "azureblob_1_authType": {
+      "value": "basic"
+    },
+    "azureblob_1_privacySetting": {
+      "value": "None"
+    },
+    "azureblob_1_accessKey": {
+      "value": "2ODVLtkzxVVKMNLKAd1qe1I/1qBxnQlokpxKeuZ3byCPwXoQT3kQevOm9ELPftCmGTzZTlkYS62kRdfyncm/yw=="
+    },
+    "sql_1_server": {
+      "value": "pival-sql-1.database.windows.net"
+    },
+    "sql_1_database": {
+      "value": "adf-logicalapp-poc"
+    },
+    "sql_1_username": {
+      "value": "sqladmin"
+    },
+    "sql_1_password": {
+      "value": "zOK2,B4\\73h^"
+    },
+    "sql_1_encryptConnection": {
+      "value": true
+    },
+    "sql_1_privacySetting": {
+      "value": "None"
+    },
+    "salesforce_1_token:LoginUri": {
+      "value": "https://d5g000004jjcream-dev-ed.my.salesforce.com"
+    },
+    "salesforce_1_privacySetting": {
+      "value": "None"
+    },
+    "sql_1_sqlConnectionString": {
+      "value": "Server=tcp:pival-sql-1.database.windows.net,1433;Initial Catalog=adf-logicalapp-poc;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";"
+    }
+  }
+}
