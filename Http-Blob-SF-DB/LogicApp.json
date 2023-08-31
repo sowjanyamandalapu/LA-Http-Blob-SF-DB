@@ -93,18 +93,6 @@
         "anonymous"
       ]
     },
-    "azureblob_1_privacySetting": {
-      "type": "string",
-      "metadata": {
-        "description": "Privacy Setting"
-      },
-      "allowedValues": [
-        "None",
-        "Private",
-        "Organizational",
-        "Public"
-      ]
-    },
     "sql_1_Connection_Name": {
       "type": "string",
       "defaultValue": "sql"
@@ -137,29 +125,15 @@
         "description": "Password credential"
       }
     },
-    "sql_1_encryptConnection": {
-      "type": "bool",
-      "metadata": {
-        "description": "Encrypt Connection"
-      }
-    },
-    "sql_1_privacySetting": {
+    "sql_1_authType": {
       "type": "string",
       "metadata": {
-        "description": "Privacy Setting"
+        "description": "Authentication type to connect to your database"
       },
       "allowedValues": [
-        "None",
-        "Private",
-        "Organizational",
-        "Public"
+        "basic",
+        "anonymous"
       ]
-    },
-    "sql_1_sqlConnectionString": {
-      "type": "securestring",
-      "metadata": {
-        "description": "SQL Connection String"
-      }
     },
     "salesforce_1_Connection_Name": {
       "type": "string",
@@ -167,7 +141,7 @@
     },
     "salesforce_1_Connection_DisplayName": {
       "type": "string",
-      "defaultValue": "sowjanya517@gmail.com"
+      "defaultValue": "salesforce"
     },
     "salesforce_1_token:LoginUri": {
       "type": "string",
@@ -194,6 +168,14 @@
         "Organizational",
         "Public"
       ]
+    },
+    "office365_1_Connection_Name": {
+      "type": "string",
+      "defaultValue": "office365"
+    },
+    "office365_1_Connection_DisplayName": {
+      "type": "string",
+      "defaultValue": "office365"
     }
   },
   "variables": {},
@@ -259,10 +241,10 @@
               "kind": "http",
               "inputs": {
                 "statusCode": 200,
-                "body": "@{body('Get_rows_(V2)_2')} "
+                "body": " @{body('Get_records')}@{body('Get_rows_(V2)_2')}"
               },
               "runAfter": {
-                "Get_rows_(V2)_2": [
+                "Send_an_email_(V2)_2": [
                   "Succeeded"
                 ]
               }
@@ -280,6 +262,29 @@
               },
               "runAfter": {
                 "Create_blob_(V2)": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Send_an_email_(V2)_2": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['office365']['connectionId']"
+                  }
+                },
+                "method": "post",
+                "body": {
+                  "To": "smandalapu@pival.com",
+                  "Subject": "Http-Blol-SF-DB",
+                  "Body": "<p>Hi,<br>\n<br>\nTesting mail<br>\n<br>\nThanks,<br>\nSowjanya</p>",
+                  "Importance": "Normal"
+                },
+                "path": "/v2/Mail"
+              },
+              "runAfter": {
+                "Get_rows_(V2)_2": [
                   "Succeeded"
                 ]
               }
@@ -320,6 +325,11 @@
                 "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', 'salesforce')]",
                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]",
                 "connectionName": "[parameters('salesforce_1_Connection_Name')]"
+              },
+              "office365": {
+                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', 'office365')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]",
+                "connectionName": "[parameters('office365_1_Connection_Name')]"
               }
             }
           }
@@ -328,7 +338,8 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
         "[resourceId('Microsoft.Web/connections', parameters('sql_1_Connection_Name'))]",
-        "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]"
+        "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]",
+        "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]"
       ]
     },
     {
@@ -344,8 +355,7 @@
         "parameterValues": {
           "accountName": "[parameters('azureblob_1_accountName')]",
           "accessKey": "[parameters('azureblob_1_accessKey')]",
-          "authType": "[parameters('azureblob_1_authType')]",
-          "privacySetting": "[parameters('azureblob_1_privacySetting')]"
+          "authType": "[parameters('azureblob_1_authType')]"
         }
       }
     },
@@ -364,9 +374,7 @@
           "database": "[parameters('sql_1_database')]",
           "username": "[parameters('sql_1_username')]",
           "password": "[parameters('sql_1_password')]",
-          "encryptConnection": "[parameters('sql_1_encryptConnection')]",
-          "privacySetting": "[parameters('sql_1_privacySetting')]",
-          "sqlConnectionString": "[parameters('sql_1_sqlConnectionString')]"
+          "authType": "[parameters('sql_1_authType')]"
         }
       }
     },
@@ -385,6 +393,18 @@
           "salesforceApiVersion": "[parameters('salesforce_1_salesforceApiVersion')]",
           "privacySetting": "[parameters('salesforce_1_privacySetting')]"
         }
+      }
+    },
+    {
+      "type": "MICROSOFT.WEB/CONNECTIONS",
+      "apiVersion": "2018-07-01-preview",
+      "name": "[parameters('office365_1_Connection_Name')]",
+      "location": "[parameters('logicAppLocation')]",
+      "properties": {
+        "api": {
+          "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', 'office365')]"
+        },
+        "displayName": "[parameters('office365_1_Connection_DisplayName')]"
       }
     }
   ],
