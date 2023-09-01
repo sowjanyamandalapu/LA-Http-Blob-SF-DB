@@ -1,196 +1,190 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "logicAppName": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 80,
-      "metadata": {
-        "description": "Name of the Logic App."
-      }
-    },
-    "azureblob_1_Connection_Name": {
-      "type": "string",
-      "defaultValue": "azureblob"
-    },
-    "sql_1_Connection_Name": {
-      "type": "string",
-      "defaultValue": "sql"
-    },
-    "salesforce_1_Connection_Name": {
-      "type": "string",
-      "defaultValue": "salesforce"
-    },
-    "office365_1_Connection_Name": {
-      "type": "string",
-      "defaultValue": "office365"
-    }
-  },
-  "variables": {},
-  "resources": [
-    {
-      "name": "[parameters('logicAppName')]",
-      "type": "Microsoft.Logic/workflows",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "LogicApp"
-      },
-      "apiVersion": "2016-06-01",
-      "properties": {
-        "definition": {
-          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-          "actions": {
-            "Create_blob_(V2)": {
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['azureblob']['connectionId']"
-                  }
-                },
-                "method": "post",
-                "body": "@triggerBody()",
-                "headers": {
-                  "ReadFileMetadataFromServer": true
-                },
-                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
-                "queries": {
-                  "folderPath": "/email-test-data",
-                  "name": "dev.json",
-                  "queryParametersSingleEncoded": true
-                }
-              },
-              "runAfter": {},
-              "runtimeConfiguration": {
-                "contentTransfer": {
-                  "transferMode": "Chunked"
-                }
-              }
-            },
-            "Get_rows_(V2)_2": {
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['sql']['connectionId']"
-                  }
-                },
-                "method": "get",
-                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('default'))},@{encodeURIComponent(encodeURIComponent('default'))}/tables/@{encodeURIComponent(encodeURIComponent('[dbo].[Employee]'))}/items"
-              },
-              "runAfter": {
-                "Get_records": [
-                  "Succeeded"
-                ]
-              }
-            },
-            "Response": {
-              "type": "Response",
-              "kind": "http",
-              "inputs": {
-                "statusCode": 200,
-                "body": " @{body('Get_records')}@{body('Get_rows_(V2)_2')}"
-              },
-              "runAfter": {
-                "Send_an_email_(V2)_2": [
-                  "Succeeded"
-                ]
-              }
-            },
-            "Get_records": {
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['salesforce']['connectionId']"
-                  }
-                },
-                "method": "get",
-                "path": "/datasets/default/tables/@{encodeURIComponent(encodeURIComponent('Employee__c'))}/items"
-              },
-              "runAfter": {
-                "Create_blob_(V2)": [
-                  "Succeeded"
-                ]
-              }
-            },
-            "Send_an_email_(V2)_2": {
-              "type": "ApiConnection",
-              "inputs": {
-                "host": {
-                  "connection": {
-                    "name": "@parameters('$connections')['office365']['connectionId']"
-                  }
-                },
-                "method": "post",
-                "body": {
-                  "To": "smandalapu@pival.com",
-                  "Subject": "Http-Blol-SF-DB",
-                  "Body": "<p>Hi,<br>\n<br>\nTesting mail<br>\n<br>\nThanks,<br>\nSowjanya</p>",
-                  "Importance": "Normal"
-                },
-                "path": "/v2/Mail"
-              },
-              "runAfter": {
-                "Get_rows_(V2)_2": [
-                  "Succeeded"
-                ]
-              }
-            }
-          },
-          "parameters": {
-            "$connections": {
-              "defaultValue": {},
-              "type": "Object"
-            }
-          },
-          "triggers": {
-            "manual": {
-              "type": "Request",
-              "kind": "Http",
-              "inputs": {
-                "schema": {}
-              }
-            }
-          },
-          "contentVersion": "1.0.0.0",
-          "outputs": {}
-        },
-        "parameters": {
-          "$connections": {
-            "value": {
-              "azureblob": {
-                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'azureblob')]",
-                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
-                "connectionName": "[parameters('azureblob_1_Connection_Name')]"
-              },
-              "sql": {
-                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'sql')]",
-                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('sql_1_Connection_Name'))]",
-                "connectionName": "[parameters('sql_1_Connection_Name')]"
-              },
-              "salesforce": {
-                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'salesforce')]",
-                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]",
-                "connectionName": "[parameters('salesforce_1_Connection_Name')]"
-              },
-              "office365": {
-                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'office365')]",
-                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]",
-                "connectionName": "[parameters('office365_1_Connection_Name')]"
-              }
-            }
-          }
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+    	"logicAppName": {
+     	 "type": "string",
+     	 "minLength": 1,
+     	 "maxLength": 80,
+     	 "metadata": {
+     	   "description": "Name of the Logic App."
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
-        "[resourceId('Microsoft.Web/connections', parameters('sql_1_Connection_Name'))]",
-        "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]",
-        "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]"
-      ]
-    }
-  ],
-  "outputs": {}
+    	},
+        "azureblob_1_Connection_Name": {
+            "defaultValue": "azureblob",
+            "type": "String"
+        },
+        "sql_1_Connection_Name": {
+            "defaultValue": "sql",
+            "type": "String"
+        },
+        "salesforce_1_Connection_Name": {
+            "defaultValue": "salesforce",
+            "type": "String"
+        },
+        "office365_1_Connection_Name": {
+            "defaultValue": "office365",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('logicAppName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "LogicApp"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Create_blob_(V2)": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": "@triggerBody()",
+                                "headers": {
+                                    "ReadFileMetadataFromServer": true
+                                },
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                "queries": {
+                                    "folderPath": "/email-test-data",
+                                    "name": "dev.json",
+                                    "queryParametersSingleEncoded": true
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        },
+                        "Get_rows_(V2)_2": {
+                            "runAfter": {
+                                "Get_records": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sql']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('default'))},@{encodeURIComponent(encodeURIComponent('default'))}/tables/@{encodeURIComponent(encodeURIComponent('[dbo].[Employee]'))}/items"
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "Send_an_email_(V2)_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 200,
+                                "body": " @{body('Get_records')}@{body('Get_rows_(V2)_2')}"
+                            }
+                        },
+                        "Get_records": {
+                            "runAfter": {
+                                "Create_blob_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['salesforce']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/datasets/default/tables/@{encodeURIComponent(encodeURIComponent('Employee__c'))}/items"
+                            }
+                        },
+                        "Send_an_email_(V2)_2": {
+                            "runAfter": {
+                                "Get_rows_(V2)_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['office365']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": {
+                                    "To": "smandalapu@pival.com",
+                                    "Subject": "Http-Blol-SF-DB",
+                                    "Body": "<p>Hi,<br>\n<br>\nTesting mail<br>\n<br>\nThanks,<br>\nSowjanya</p>",
+                                    "Importance": "Normal"
+                                },
+                                "path": "/v2/Mail"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionID, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'azureblob')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]", 
+                                "connectionName": "azureblob"
+                            },
+                            "sql": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionID, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'sql')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('sql_1_Connection_Name'))]",
+                                "connectionName": "sql"
+                            },
+                            "salesforce": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionID, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'salesforce')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('salesforce_1_Connection_Name'))]",
+                                "connectionName": "salesforce"
+                            },
+                            "office365": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionID, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'office365')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]",
+                                "connectionName": "office365"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
 }
