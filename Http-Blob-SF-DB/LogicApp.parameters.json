@@ -5,9 +5,6 @@
     "logicAppName": {
       "value": null
     },
-    "logicAppLocation": {
-      "value": "[resourceGroup().location]"
-    },
     "azureblob_1_Connection_Name": {
       "value": "azureblob"
     },
